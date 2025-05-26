@@ -12,7 +12,7 @@
 class FREulerSolver
 {
 public:
-    FREulerSolver(Mesh mesh, const Vec4 &init_P);
+    FREulerSolver(Mesh&& mesh, const Vec4& init_P);
     void setGamma(double g);
     void set_fws_bc(double rho, double u, double p);
     void advance(double dt);

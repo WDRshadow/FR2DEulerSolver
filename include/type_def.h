@@ -11,7 +11,7 @@
 // 基本数据结构
 // -----------------------------------------
 
-using Vec4 = std::array<double, 4>;
+using Vec4 = std::array<double, 4>; // {rho, u, v, p} / {rho, rhou, rhov, e}
 using Flux = std::array<Vec4, 2>; // Fx, Fy
 using Matrix2d = std::array<std::array<double, 2>, 2>; // 2x2矩阵
 

@@ -4,6 +4,7 @@
 #include "type_def.h"
 
 #define GAMMA 1.4
+#define MACH 340.3
 
 // -----------------------------------------
 // 能量/压力计算

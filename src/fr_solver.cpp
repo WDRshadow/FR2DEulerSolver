@@ -5,7 +5,7 @@
 
 using Flux3 = std::array<Flux, 3>; // 3个节点的通量
 
-FREulerSolver::FREulerSolver(Mesh mesh, const Vec4& init_P)
+FREulerSolver::FREulerSolver(Mesh&& mesh, const Vec4& init_P)
     : mesh(std::move(mesh))
 {
     const Vec4 Q0 = toConservative(init_P, gamma);
@@ -49,33 +49,38 @@ std::vector<Q9> FREulerSolver::advance(const std::vector<Q9>& nodes, const doubl
         for (int j = 0; j < 9; ++j)
         {
             newNodes[i][j] += dt * residual[j];
+            if (newNodes[i][j][0] < 0 || newNodes[i][j][3] < 0)
+            {
+                throw std::runtime_error("Negative density or pressure encountered in the solution.");
+            }
         }
     }
     return newNodes;
 }
 
-void set_bc(int faceType, Q9& q9_neighbour, const Q9& q9_local, const std::array<double, 3>& bc, const double gamma)
+void set_bc(int faceType, Q3& q3_neighbour, const Q9& q9_local, const std::array<double, 3>& bc, const double gamma)
 {
+    auto points = face_mapping(faceType);
     switch (faceType)
     {
     case BOTTOM:
     case TOP:
         {
-            q9_neighbour = q9_local;
-            q9_neighbour[0][2] = -q9_local[0][2];
-            q9_neighbour[1][2] = -q9_local[1][2];
-            q9_neighbour[2][2] = -q9_local[2][2];
+            q3_neighbour = {q9_local[points[0]], q9_local[points[1]], q9_local[points[2]]};
+            q3_neighbour[0][2] = -q3_neighbour[0][2];
+            q3_neighbour[1][2] = -q3_neighbour[1][2];
+            q3_neighbour[2][2] = -q3_neighbour[2][2];
             break;
         }
     case RIGHT:
         {
-            q9_neighbour = q9_local;
+            q3_neighbour = {q9_local[points[0]], q9_local[points[1]], q9_local[points[2]]};
             break;
         }
     case LEFT:
         {
             Vec4 bc_l = toConservative({bc[0], bc[1], 0.0, bc[2]}, gamma);
-            q9_neighbour = {bc_l, bc_l, bc_l};
+            q3_neighbour = {bc_l, bc_l, bc_l};
             break;
         }
     default:
@@ -92,24 +97,34 @@ auto diffFlux(int cellId, const Mesh& mesh, double gamma, const std::vector<Q9>&
     const auto& cell = mesh.elements[cellId];
     const auto& face = mesh.faces[cell.faceIds[faceType]];
     const auto& q9 = nodes[cellId];
-    auto q9_neighbour = face.leftCell == cellId ? nodes[face.rightCell] : nodes[face.leftCell];
-    if (face.leftCell == -1 || face.rightCell == -1)
-    {
-        set_bc(faceType, q9_neighbour, q9, bc, gamma);
-    }
     auto normal = faceType == RIGHT || faceType == TOP ? face.normal : Point{-face.normal.x, -face.normal.y};
     auto points = face_mapping(faceType);
     auto points_neighbour = face_mapping((faceType + 2) % 4);
-    return [=](double s)
+    Q3 q3_neighbour{};
+    if (face.leftCell == -1 || face.rightCell == -1)
+    {
+        set_bc(faceType, q3_neighbour, q9, bc, gamma);
+    }
+    else
+    {
+        const auto& nodes_neighbour = face.leftCell == cellId ? nodes[face.rightCell] : nodes[face.leftCell];
+        q3_neighbour = {
+            nodes_neighbour[points_neighbour[0]],
+            nodes_neighbour[points_neighbour[1]],
+            nodes_neighbour[points_neighbour[2]]
+        };
+    }
+    return [&q9, points, q3_neighbour, gamma, normal, cellId, &mesh](double s)
     {
         Flux result{};
         for (int i = 0; i < 3; ++i)
         {
             auto phyFlux = physicalFlux(q9[points[i]], gamma);
-            auto numFlux = rusanovFlux(q9[points[i]], q9_neighbour[points_neighbour[i]], normal, gamma);
+            auto numFlux = rusanovFlux(q9[points[i]], q3_neighbour[i], normal, gamma);
             auto local_phyFlux = toLocalFlux(phyFlux, cellId, mesh, gll_2d(points[i]));
             auto local_numFlux = toLocalFlux(numFlux, cellId, mesh, gll_2d(points[i]));
             result[0] += (local_numFlux[0] - local_phyFlux[0]) * lagrange(i, s);
+            result[1] += (local_numFlux[1] - local_phyFlux[1]) * lagrange(i, s);
         }
         return result;
     };
