@@ -65,7 +65,7 @@ add_test(NAME corr_f_test COMMAND corr_f_test)
 add_executable(fr_solver_test
         fr_solver_test.cpp
 )
-if(CMAKE_CUDA_COMPILER)
+if(CUDAToolkit_FOUND)
     target_link_libraries(fr_solver_test
         PRIVATE
         GTest::gtest_main
