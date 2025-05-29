@@ -1,3 +1,5 @@
+#include <stdexcept>
+
 #include "fr_solver.h"
 #include "corr_f.h"
 #include "euler_eq.h"

@@ -1,3 +1,5 @@
+#include <stdexcept>
+
 #include "shape_f.h"
 
 std::vector<Q9> operator+(const std::vector<Q9>& a, const std::vector<Q9>& b)
@@ -7,9 +9,9 @@ std::vector<Q9> operator+(const std::vector<Q9>& a, const std::vector<Q9>& b)
         throw std::invalid_argument("Vectors must be of the same size");
     }
     std::vector<Q9> result(a.size());
-    for (size_t i = 0; i < a.size(); ++i)
+    for (int i = 0; i < a.size(); ++i)
     {
-        for (size_t j = 0; j < 9; ++j)
+        for (int j = 0; j < 9; ++j)
         {
             result[i][j] = a[i][j] + b[i][j];
         }
@@ -20,9 +22,9 @@ std::vector<Q9> operator+(const std::vector<Q9>& a, const std::vector<Q9>& b)
 std::vector<Q9> operator*(const std::vector<Q9>& a, const double b)
 {
     std::vector<Q9> result(a.size());
-    for (size_t i = 0; i < a.size(); ++i)
+    for (int i = 0; i < a.size(); ++i)
     {
-        for (size_t j = 0; j < 9; ++j)
+        for (int j = 0; j < 9; ++j)
         {
             result[i][j] = a[i][j] * b;
         }
@@ -36,9 +38,9 @@ void operator+=(std::vector<Q9>& a, const std::vector<Q9>& b)
     {
         throw std::invalid_argument("Vectors must be of the same size");
     }
-    for (size_t i = 0; i < a.size(); ++i)
+    for (int i = 0; i < a.size(); ++i)
     {
-        for (size_t j = 0; j < 9; ++j)
+        for (int j = 0; j < 9; ++j)
         {
             a[i][j] += b[i][j];
         }

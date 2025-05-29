@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "mesh.h"
 #include "shape_f.h"
 

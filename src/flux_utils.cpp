@@ -1,3 +1,5 @@
+#include <cmath>
+
 #include "flux_utils.h"
 #include "shape_f.h"
 #include "mesh.h"
