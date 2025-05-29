@@ -8,6 +8,7 @@
 // -----------------------------------------
 
 void init_fws_mesh(Mesh& mesh, int nx, int ny, double width, double height, double stepX, double stepH);
+void init_fws_mesh2(Mesh& mesh, int nx, int ny, double width, double height, int stepNX, int stepNY);
 
 // -----------------------------------------
 // 单元内 Jacobian 矩阵计算

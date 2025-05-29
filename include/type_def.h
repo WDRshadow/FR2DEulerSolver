@@ -30,10 +30,13 @@ struct Cell
 {
     std::array<int, 4> vertexIds; // 四边形的四个顶点
     std::array<int, 4> faceIds; // 相邻的四条边 （下，右，上，左）
+    bool isValid; // 是否有效单元
 };
 
 struct Mesh
 {
+    int nx, ny;
+    double width, height;
     std::vector<Point> vertices;
     std::vector<Face> faces;
     std::vector<Cell> elements;

@@ -6,6 +6,10 @@
 void init_fws_mesh(Mesh& mesh, const int nx, const int ny, const double width, const double height, const double stepX,
                    const double stepH)
 {
+    mesh.nx = nx;
+    mesh.ny = ny;
+    mesh.width = width;
+    mesh.height = height;
     auto idx = [=](int i, int j)
     {
         return j * (nx + 1) + i;
@@ -29,6 +33,7 @@ void init_fws_mesh(Mesh& mesh, const int nx, const int ny, const double width, c
         for (int i = 0; i < nx; ++i)
         {
             Cell cell{};
+            cell.isValid = true;
             cell.vertexIds = {idx(i, j), idx(i + 1, j), idx(i + 1, j + 1), idx(i, j + 1)};
             mesh.elements.push_back(cell);
         }
@@ -113,6 +118,112 @@ void init_fws_mesh(Mesh& mesh, const int nx, const int ny, const double width, c
             {
                 mesh.elements[face.rightCell].faceIds[0] = id;
             }
+        }
+    }
+}
+
+void init_fws_mesh2(Mesh& mesh, const int nx, const int ny, const double width, const double height, const int stepNX,
+                    const int stepNY)
+{
+    mesh.nx = nx;
+    mesh.ny = ny;
+    mesh.width = width;
+    mesh.height = height;
+    mesh.vertices.clear();
+    mesh.faces.clear();
+    mesh.elements.clear();
+
+    double dx = width / nx;
+    double dy = height / ny;
+
+    auto idx = [=](int i, int j)
+    {
+        return j * (nx + 1) + i;
+    };
+
+    // 1. 生成顶点
+    for (int j = 0; j <= ny; ++j)
+    {
+        for (int i = 0; i <= nx; ++i)
+        {
+            double x = i * dx;
+            double y = j * dy;
+            mesh.vertices.push_back({x, y});
+        }
+    }
+
+    // 2. 生成单元，跳过台阶区域
+    std::vector cellMap(nx * ny, -1);
+    for (int j = 0; j < ny; ++j)
+    {
+        for (int i = 0; i < nx; ++i)
+        {
+            Cell cell{};
+            int cellId = j * nx + i;
+            if (i >= nx - stepNX && j < stepNY)
+            {
+                cell.isValid = false;
+            }
+            else
+            {
+                cell.isValid = true;
+                cellMap[cellId] = cellId;
+            }
+            cell.vertexIds = {idx(i, j), idx(i + 1, j), idx(i + 1, j + 1), idx(i, j + 1)};
+            mesh.elements.push_back(cell);
+        }
+    }
+
+    // 3. 生成竖直方向的边
+    for (int j = 0; j < ny; ++j)
+    {
+        for (int i = 0; i <= nx; ++i)
+        {
+            int left = i == 0 ? -1 : cellMap[j * nx + (i - 1)];
+            int right = i == nx ? -1 : cellMap[j * nx + i];
+            if (left != -1 && right == -1 && j < stepNY)
+            {
+                // 如果左边有单元，右边没有单元且在台阶区域内，则标记为特殊边
+                right = -2; // 特殊标记
+            }
+            Face face{};
+            const auto& v0 = mesh.vertices[idx(i, j)];
+            const auto& v1 = mesh.vertices[idx(i, j + 1)];
+            double dx_ = v1.x - v0.x;
+            double dy_ = v1.y - v0.y;
+            double norm = std::sqrt(dx_ * dx_ + dy_ * dy_);
+            face.normal.x = dy_ / norm;
+            face.normal.y = -dx_ / norm;
+            face.leftCell = left;
+            face.rightCell = right;
+            mesh.faces.push_back(face);
+            int faceId = mesh.faces.size() - 1;
+            if (left != -1) mesh.elements[left].faceIds[1] = faceId;
+            if (right != -1) mesh.elements[right].faceIds[3] = faceId;
+        }
+    }
+
+    // 4. 生成水平方向的边
+    for (int j = 0; j <= ny; ++j)
+    {
+        for (int i = 0; i < nx; ++i)
+        {
+            int down = (j == 0) ? -1 : cellMap[(j - 1) * nx + i];
+            int up = (j == ny) ? -1 : cellMap[j * nx + i];
+            Face face{};
+            const auto& v0 = mesh.vertices[idx(i, j)];
+            const auto& v1 = mesh.vertices[idx(i + 1, j)];
+            double dx_ = v1.x - v0.x;
+            double dy_ = v1.y - v0.y;
+            double norm = std::sqrt(dx_ * dx_ + dy_ * dy_);
+            face.normal.x = -dy_ / norm;
+            face.normal.y = dx_ / norm;
+            face.leftCell = down;
+            face.rightCell = up;
+            mesh.faces.push_back(face);
+            int faceId = mesh.faces.size() - 1;
+            if (down != -1) mesh.elements[down].faceIds[2] = faceId;
+            if (up != -1) mesh.elements[up].faceIds[0] = faceId;
         }
     }
 }

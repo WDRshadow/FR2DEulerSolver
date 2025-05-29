@@ -106,10 +106,51 @@ double gll_1d(const int i)
     }
 }
 
+double gll_weight_1d(int i)
+{
+    switch (i)
+    {
+    case 0:
+        return 1.0 / 3.0;
+    case 1:
+        return 4.0 / 3.0;
+    case 2:
+        return 1.0 / 3.0;
+    default:
+        throw std::invalid_argument("Invalid index for GLL node");
+    }
+}
+
+Vec4 gll_integrate_1d(const Q3& q3)
+{
+    Vec4 result{};
+    for (int i = 0; i < 3; ++i)
+    {
+        result += q3[i] * gll_weight_1d(i);
+    }
+    return result;
+}
+
 Point gll_2d(const int i)
 {
     auto [x, y] = mapping_q9(i);
     return {gll_1d(x), gll_1d(y)};
+}
+
+double gll_weight_2d(int i)
+{
+    auto [_i, _j] = mapping_q9(i);
+    return gll_weight_1d(_i) * gll_weight_1d(_j);
+}
+
+Vec4 gll_integrate_2d(const Q9& q9)
+{
+    Vec4 result{};
+    for (int i = 0; i < 9; ++i)
+    {
+        result += q9[i] * gll_weight_2d(i);
+    }
+    return result;
 }
 
 double lagrange(const int i, const double s)
@@ -209,4 +250,16 @@ std::array<double, 2> dshape(const int i, const double xi, const double eta)
     default:
         throw std::invalid_argument("Invalid index for shape function");
     }
+}
+
+Point interpolate(const std::array<Point, 4>& pts, double xi, double eta)
+{
+    Point result{};
+    for (int i = 0; i < 4; ++i)
+    {
+        const auto shape_i = shape(i, xi, eta);
+        result.x += pts[i].x * shape_i;
+        result.y += pts[i].y * shape_i;
+    }
+    return result;
 }

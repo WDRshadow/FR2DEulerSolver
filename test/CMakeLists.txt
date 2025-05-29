@@ -62,6 +62,18 @@ add_test(NAME corr_f_test COMMAND corr_f_test)
 
 # -----------------------------------------
 
+add_executable(thread_pool_test
+        thread_pool_test.cpp
+)
+target_link_libraries(thread_pool_test
+        PRIVATE
+        GTest::gtest_main
+        fr
+)
+add_test(NAME thread_pool_test COMMAND thread_pool_test)
+
+# -----------------------------------------
+
 add_executable(fr_solver_test
         fr_solver_test.cpp
 )

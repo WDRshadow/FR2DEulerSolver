@@ -3,6 +3,7 @@
 
 #include "type_def.h"
 #include "euler_eq.h"
+#include "shape_f.h"
 
 // -----------------------------------------
 // Rusanov Numerical Flux
@@ -11,11 +12,16 @@
 Flux rusanovFlux(const Vec4& QL, const Vec4& QR, const Point& normal, double gamma = GAMMA);
 
 // -----------------------------------------
-// Utils
+// Flux Gradient
 // -----------------------------------------
 
-Flux toLocalFlux(const Flux& F_global, int cellId, const Mesh& mesh, const Point& local_point);
-Flux interpolateFlux(const std::array<Flux, 9>& fluxs, double xi, double eta);
-Flux gradFlux(const std::array<Flux, 9>& fluxs, double xi, double eta);
+Flux gradFlux(const Q9& q9, double xi, double eta);
+
+// -----------------------------------------
+// Limiter
+// -----------------------------------------
+
+double minmod(double a, double b);
+void bound_preserving_limiter(Q9 &cellQ, double gamma);
 
 #endif //FLUX_UTILS_H

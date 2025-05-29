@@ -31,7 +31,11 @@ std::array<int, 3> face_mapping(int faceType);
 // -----------------------------------------
 
 double gll_1d(int i);
+double gll_weight_1d(int i);
+Vec4 gll_integrate_1d(const Q3& q3);
 Point gll_2d(int i);
+double gll_weight_2d(int i);
+Vec4 gll_integrate_2d(const Q9& q9);
 
 // -----------------------------------------
 // 3x3 Lagrange插值函数
@@ -50,5 +54,6 @@ Vec4 interpolate(const Q9& Qs, double xi, double eta);
 
 double shape(int i, double xi, double eta);
 std::array<double, 2> dshape(int i, double xi, double eta);
+Point interpolate(const std::array<Point, 4>& pts, double xi, double eta);
 
 #endif //SHAPE_F_H
