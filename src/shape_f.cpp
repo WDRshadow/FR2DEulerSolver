@@ -91,6 +91,16 @@ std::array<int, 3> face_mapping(int faceType)
     }
 }
 
+Q3 face_mapping(const Q9& q9, int faceType)
+{
+    Q3 result{};
+    const auto [i, j, k] = face_mapping(faceType);
+    result[0] = q9[i];
+    result[1] = q9[j];
+    result[2] = q9[k];
+    return result;
+}
+
 double gll_1d(const int i)
 {
     switch (i)

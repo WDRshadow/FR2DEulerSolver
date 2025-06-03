@@ -25,6 +25,7 @@ void operator+=(std::vector<Q9>& a, const std::vector<Q9>& b);
 
 std::array<int, 2> mapping_q9(int i);
 std::array<int, 3> face_mapping(int faceType);
+Q3 face_mapping(const Q9& q9, int faceType);
 
 // -----------------------------------------
 // 3x3 Gauss–Lobatto–Legendre 节点

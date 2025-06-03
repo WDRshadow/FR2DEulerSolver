@@ -16,7 +16,10 @@ else()
     file(GLOB SRC_FILES src/*.cpp src/cpu/*.cpp)
 endif()
 
+find_package(Eigen3 REQUIRED)
+
 add_library(fr STATIC ${SRC_FILES})
+target_link_libraries(fr Eigen3::Eigen)
 
 add_executable(FR2DEulerSolver main.cpp)
 target_link_libraries(FR2DEulerSolver fr)

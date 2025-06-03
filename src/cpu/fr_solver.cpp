@@ -8,6 +8,35 @@
 
 using Flux3 = std::array<Flux, 3>;
 
+FREulerSolver::FREulerSolver(Mesh&& mesh, const double u_inf, const double v_inf, const double beta)
+    : mesh(std::move(mesh))
+{
+    auto getCellCoord = [&](int cellId)
+    {
+        int i = cellId % this->mesh.nx;
+        int j = cellId / this->mesh.nx;
+        return std::make_pair(i, j);
+    };
+    const auto [ci, cj] = getCellCoord(this->mesh.elements.size() / 2);
+    auto getP = [&](int cellId) -> Vec4
+    {
+        auto [i, j] = getCellCoord(cellId);
+        double r = std::sqrt((i - ci) * (i - ci) + (j - cj) * (j - cj));
+        double u = u_inf - beta / (2 * EIGEN_PI) * std::exp((1 - r * r) / 2) * (j - cj);
+        double v = v_inf + beta / (2 * EIGEN_PI) * std::exp((1 - r * r) / 2) * (i - ci);
+        return {1, u, v, 1};
+    };
+    nodes.resize(this->mesh.elements.size());
+    for (int i = 0; i < this->mesh.elements.size(); ++i)
+    {
+        if (!this->mesh.elements[i].isValid) continue;
+        for (int j = 0; j < 9; ++j)
+        {
+            nodes[i][j] = toConservative(getP(i), gamma);
+        }
+    }
+}
+
 FREulerSolver::FREulerSolver(Mesh&& mesh, const Vec4& init_P)
     : mesh(std::move(mesh))
 {
@@ -38,16 +67,16 @@ void FREulerSolver::advance(const double dt)
     // RK4
     const auto k1 = computeResidual(nodes);
     auto u1_temp = nodes + k1 * (dt / 2);
-    boundPreservingLimiter(u1_temp);
+    // boundPreservingLimiter(u1_temp);
     const auto k2 = computeResidual(u1_temp);
     auto u2_temp = nodes + k2 * (dt / 2);
-    boundPreservingLimiter(u2_temp);
+    // boundPreservingLimiter(u2_temp);
     const auto k3 = computeResidual(u2_temp);
     auto u3_temp = nodes + k3 * dt;
-    boundPreservingLimiter(u3_temp);
+    // boundPreservingLimiter(u3_temp);
     const auto k4 = computeResidual(u3_temp);
     nodes += (k1 + k2 * 2 + k3 * 2 + k4) * (dt / 6);
-    boundPreservingLimiter(nodes);
+    // boundPreservingLimiter(nodes);
     currentTime += dt;
 }
 
@@ -108,13 +137,7 @@ std::function<Flux(double s)> FREulerSolver::diffFlux(const std::vector<Q9>& _no
     const auto& face = mesh.faces[cell.faceIds[faceType]];
     const auto& q9_local = _nodes[cellId];
     const auto normal = faceType == RIGHT || faceType == TOP ? face.normal : Point{-face.normal.x, -face.normal.y};
-    const auto points_local = face_mapping(faceType);
-    const auto points_neighbour = face_mapping((faceType + 2) % 4);
-    const Q3 q3_local{
-        q9_local[points_local[0]],
-        q9_local[points_local[1]],
-        q9_local[points_local[2]]
-    };
+    const Q3 q3_local = face_mapping(q9_local, faceType);
     Q3 q3_neighbour;
     if (face.leftCell == -1 || face.rightCell == -1 || face.rightCell == -2)
     {
@@ -154,38 +177,12 @@ std::function<Flux(double s)> FREulerSolver::diffFlux(const std::vector<Q9>& _no
     else
     {
         const auto& q9_neighbour = face.leftCell == cellId ? nodes[face.rightCell] : nodes[face.leftCell];
-        q3_neighbour = {
-            q9_neighbour[points_neighbour[0]],
-            q9_neighbour[points_neighbour[1]],
-            q9_neighbour[points_neighbour[2]]
-        };
+        q3_neighbour = face_mapping(q9_neighbour, (faceType + 2) % 4);
     }
-    // Minmod Limiter
-    // Vec4 q_avg_loc = 0.5 * gll_integrate_1d(q3_local);
-    // Vec4 q_avg_neigh = 0.5 * gll_integrate_1d(q3_neighbour);
-    // Q3 d_loc{};
-    // Q3 d_neigh{};
-    // for (int i = 0; i < 3; ++i)
-    // {
-    //     d_loc[i] = q3_local[i] - q_avg_loc;
-    //     d_neigh[i] = q3_neighbour[i] - q_avg_neigh;
-    // }
     Flux3 phyFlux{};
     Flux3 numFlux{};
     for (int i = 0; i < 3; ++i)
     {
-        // Vec4 delta_loc{};
-        // Vec4 delta_neigh{};
-        // for (int k = 0; k < 4; ++k)
-        // {
-        //     delta_loc[k] = minmod(d_loc[i][k], d_loc[(i + 1) % 3][k]);
-        //     delta_loc[k] = minmod(delta_loc[k], d_loc[(i + 2) % 3][k]);
-        //     delta_neigh[k] = minmod(d_neigh[i][k], d_neigh[(i + 1) % 3][k]);
-        //     delta_neigh[k] = minmod(delta_neigh[k], d_neigh[(i + 2) % 3][k]);
-        // }
-        // Vec4 QL_lim = q_avg_loc + 0.5 * delta_loc;
-        // Vec4 QR_lim = q_avg_neigh - 0.5 * delta_neigh;
-
         phyFlux[i] = physicalFlux(q3_local[i], gamma);
         numFlux[i] = rusanovFlux(q3_local[i], q3_neighbour[i], normal, gamma);
     }
@@ -198,6 +195,10 @@ std::function<Flux(double s)> FREulerSolver::diffFlux(const std::vector<Q9>& _no
             result[0] += (numFlux[i][0] - phyFlux[i][0]) * w;
             result[1] += (numFlux[i][1] - phyFlux[i][1]) * w;
         }
+        const auto Js = jacobian(mesh, cellId, faceType, s);
+        const auto Js_det = det(Js);
+        result[1] = result[1] * Js_det;
+        result[0] = result[0] * Js_det;
         return result;
     };
 }
@@ -214,10 +215,12 @@ Q9 FREulerSolver::computeCellResidual(const std::vector<Q9>& _nodes, const int c
     const auto& q9 = _nodes[cellId];
     auto gradCorrFlux = [&](const double xi, const double eta)
     {
+        const auto J = jacobian(mesh, cellId, xi, eta);
+        const auto J_det = det(J);
         auto result = gradFlux(q9, xi, eta);
-        result[0] += dF_l(eta)[0] * dg2L(xi) + dF_r(eta)[0] * dg2R(xi);
-        result[1] += dF_b(xi)[1] * dg2L(eta) + dF_t(xi)[1] * dg2R(eta);
-        return result;
+        result[0] += (dF_l(eta)[0] * dg2L(xi) + dF_r(eta)[0] * dg2R(xi)) / J_det;
+        result[1] += (dF_b(xi)[1] * dg2L(eta) + dF_t(xi)[1] * dg2R(eta)) / J_det;
+        return T(inv(J)) * result;
     };
 
     // 计算残差 -----------------------------------------------------------
@@ -226,8 +229,6 @@ Q9 FREulerSolver::computeCellResidual(const std::vector<Q9>& _nodes, const int c
     {
         auto [xi, eta] = gll_2d(i);
         auto grad_f_corr = gradCorrFlux(xi, eta);
-        const auto J = jacobian(mesh, cellId, xi, eta);
-        grad_f_corr = T(inv(J)) * grad_f_corr;
         residual[i] = -(grad_f_corr[0] + grad_f_corr[1]);
     }
     return residual;
