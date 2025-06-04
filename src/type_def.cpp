@@ -100,8 +100,10 @@ Matrix2d inv(const Matrix2d& J)
 Matrix2d T(const Matrix2d& J)
 {
     Matrix2d J_T;
+    J_T[0][0] = J[0][0];
     J_T[0][1] = J[1][0];
     J_T[1][0] = J[0][1];
+    J_T[1][1] = J[1][1];
     return J_T;
 }
 

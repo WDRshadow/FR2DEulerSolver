@@ -7,6 +7,11 @@
 #define AIR_RHO 1.225
 #define ONE_STD_ATM 101325
 
+#define X_WALL (-1)
+#define Y_WALL (-2)
+#define INLET (-3)
+#define OUTLET (-4)
+
 // -----------------------------------------
 // 基本数据结构
 // -----------------------------------------

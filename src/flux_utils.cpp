@@ -13,7 +13,7 @@ double maxEig(const Vec4& Q, const Point& normal, const double gamma)
     return std::abs(un) + c;
 }
 
-Flux rusanovFlux(const Vec4& QL, const Vec4& QR, const Point& normal, const double gamma)
+Vec4 rusanovFlux(const Vec4& QL, const Vec4& QR, const Point& normal, const double gamma)
 {
     double sL = maxEig(QL, normal, gamma);
     double sR = maxEig(QR, normal, gamma);
@@ -22,8 +22,7 @@ Flux rusanovFlux(const Vec4& QL, const Vec4& QR, const Point& normal, const doub
     auto [FR, GR] = physicalFlux(QR, gamma);
     double nx = normal.x, ny = normal.y;
     Vec4 Fn_nor = 0.5 * (FL * nx + GL * ny + FR * nx + GR * ny) - 0.5 * s * (QR - QL);
-    Flux Fn = {Fn_nor * nx, Fn_nor * ny};
-    return Fn;
+    return Fn_nor;
 }
 
 Flux gradFlux(const Q9& q9, const double xi, const double eta)

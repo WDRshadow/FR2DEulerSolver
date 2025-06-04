@@ -16,6 +16,6 @@ void init_fws_mesh3(Mesh& mesh, int nx, int ny, double width, double height);
 // -----------------------------------------
 
 Matrix2d jacobian(const Mesh& mesh, int cellId, double xi, double eta);
-Matrix2d jacobian(const Mesh& mesh, int cellId, int faceType, double s);
+double jacobian(const Mesh& mesh, int cellId, int faceType);
 
 #endif //MESH_H

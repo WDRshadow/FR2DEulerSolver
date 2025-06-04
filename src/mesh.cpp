@@ -56,13 +56,13 @@ void init_fws_mesh(Mesh& mesh, const int nx, const int ny, const double width, c
             face.normal.y = -dx / norm;
             if (i == 0)
             {
-                face.leftCell = -1;
+                face.leftCell = INLET;
                 face.rightCell = j * nx + 0;
             }
             else if (i == nx)
             {
                 face.leftCell = j * nx + (nx - 1);
-                face.rightCell = -1;
+                face.rightCell = OUTLET;
             }
             else
             {
@@ -96,13 +96,13 @@ void init_fws_mesh(Mesh& mesh, const int nx, const int ny, const double width, c
             face.normal.y = dx / norm;
             if (j == 0)
             {
-                face.leftCell = -1;
+                face.leftCell = Y_WALL;
                 face.rightCell = i;
             }
             else if (j == ny)
             {
                 face.leftCell = (ny - 1) * nx + i;
-                face.rightCell = -1;
+                face.rightCell = Y_WALL;
             }
             else
             {
@@ -179,12 +179,11 @@ void init_fws_mesh2(Mesh& mesh, const int nx, const int ny, const double width, 
     {
         for (int i = 0; i <= nx; ++i)
         {
-            int left = i == 0 ? -1 : cellMap[j * nx + (i - 1)];
-            int right = i == nx ? -1 : cellMap[j * nx + i];
-            if (left != -1 && right == -1 && j < stepNY)
+            int left = i == 0 ? INLET : cellMap[j * nx + (i - 1)];
+            int right = i == nx ? OUTLET : cellMap[j * nx + i];
+            if (left >= 0 && right < 0 && j < stepNY)
             {
-                // 如果左边有单元，右边没有单元且在台阶区域内，则标记为特殊边
-                right = -2; // 特殊标记
+                right = X_WALL;
             }
             Face face{};
             const auto& v0 = mesh.vertices[idx(i, j)];
@@ -208,8 +207,12 @@ void init_fws_mesh2(Mesh& mesh, const int nx, const int ny, const double width, 
     {
         for (int i = 0; i < nx; ++i)
         {
-            int down = (j == 0) ? -1 : cellMap[(j - 1) * nx + i];
-            int up = (j == ny) ? -1 : cellMap[j * nx + i];
+            int down = j == 0 ? Y_WALL : cellMap[(j - 1) * nx + i];
+            int up = j == ny ? Y_WALL : cellMap[j * nx + i];
+            if (j == stepNY && i >= nx - stepNX)
+            {
+                down = Y_WALL;
+            }
             Face face{};
             const auto& v0 = mesh.vertices[idx(i, j)];
             const auto& v1 = mesh.vertices[idx(i + 1, j)];
@@ -350,47 +353,40 @@ Matrix2d jacobian(const Mesh& mesh, const int cellId, const double xi, const dou
     return J;
 }
 
-Matrix2d jacobian(const Mesh& mesh, const int cellId, const int faceType, const double s)
+double jacobian(const Mesh& mesh, const int cellId, const int faceType)
 {
     const auto& cell = mesh.elements[cellId];
-    double xi, eta;
+    Point points[2];
     switch (faceType)
     {
     case BOTTOM:
         {
-            xi = s;
-            eta = -1.0;
+            points[0] = mesh.vertices[cell.vertexIds[0]];
+            points[1] = mesh.vertices[cell.vertexIds[1]];
             break;
         }
     case RIGHT:
         {
-            xi = 1.0;
-            eta = s;
+            points[0] = mesh.vertices[cell.vertexIds[1]];
+            points[1] = mesh.vertices[cell.vertexIds[2]];
             break;
         }
     case TOP:
         {
-            xi = s;
-            eta = 1.0;
+            points[0] = mesh.vertices[cell.vertexIds[3]];
+            points[1] = mesh.vertices[cell.vertexIds[2]];
             break;
         }
     case LEFT:
         {
-            xi = -1.0;
-            eta = s;
+            points[0] = mesh.vertices[cell.vertexIds[0]];
+            points[1] = mesh.vertices[cell.vertexIds[3]];
             break;
         }
     default:
         throw std::invalid_argument("Invalid face Type");
     }
-    std::array<std::array<double, 2>, 2> J{};
-    for (int i = 0; i < 4; ++i)
-    {
-        auto [dN_dxi, dN_deta] = dshape(i, xi, eta);
-        J[0][0] += mesh.vertices[cell.vertexIds[i]].x * dN_dxi;
-        J[0][1] += mesh.vertices[cell.vertexIds[i]].x * dN_deta;
-        J[1][0] += mesh.vertices[cell.vertexIds[i]].y * dN_dxi;
-        J[1][1] += mesh.vertices[cell.vertexIds[i]].y * dN_deta;
-    }
-    return J;
+    double L = std::sqrt((points[1].x - points[0].x) * (points[1].x - points[0].x) +
+                                  (points[1].y - points[0].y) * (points[1].y - points[0].y));
+    return 0.5 * L;
 }

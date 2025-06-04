@@ -10,4 +10,9 @@ void writeFRSolutionVTU(const std::string& filename,
                         const Mesh& mesh,
                         double gamma = GAMMA);
 
+void writeAvgFRSolutionVTU(const std::string& filename,
+                        const std::vector<Q9>& nodes,
+                        const Mesh& mesh,
+                        double gamma = GAMMA);
+
 #endif //VTU_H

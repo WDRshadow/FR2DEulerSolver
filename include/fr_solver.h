@@ -16,7 +16,7 @@ public:
     FREulerSolver(Mesh&& mesh, double u_inf, double v_inf, double beta);
     FREulerSolver(Mesh&& mesh, const Vec4& init_P);
     void setGamma(double g);
-    void set_fws_bc(double rho, double u, double p);
+    void set_fws_bc(double rho, double u, double v, double p);
     void advance(double dt);
     [[nodiscard]] double getCurrentTime() const;
     std::vector<Q9> getNodes() const;
@@ -28,12 +28,12 @@ private:
     double currentTime = 0.0;
     double gamma = GAMMA;
     ThreadPool pool{std::thread::hardware_concurrency()};
-    std::array<double, 3> bc = {AIR_RHO, 3 * MACH, ONE_STD_ATM};
+    Vec4 bc = {AIR_RHO, 3 * MACH, 0.0, ONE_STD_ATM};
 
     void boundPreservingLimiter(std::vector<Q9>& _nodes);
     [[nodiscard]] std::vector<Q9> computeResidual(const std::vector<Q9>& _nodes);
     [[nodiscard]] Q9 computeCellResidual(const std::vector<Q9>& _nodes, int cellId) const;
-    std::function<Flux(double s)> diffFlux(const std::vector<Q9>& _nodes, int cellId, int faceType) const;
+    std::function<Vec4(double s)> diffFlux(const std::vector<Q9>& _nodes, int cellId, int faceType) const;
 };
 
 #endif //FR_SOLVER_H

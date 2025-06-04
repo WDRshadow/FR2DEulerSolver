@@ -8,6 +8,13 @@ int main(int argc, char** argv)
     return RUN_ALL_TESTS();
 }
 
+TEST(MAPPING, face)
+{
+    auto bottom1 = face_mapping(BOTTOM);
+    auto bottom2 = face_mapping((TOP + 2) % 4);
+    EXPECT_EQ(bottom1, bottom2);
+}
+
 TEST(Lagrange, shape_func)
 {
     EXPECT_EQ(lagrange(0, -1), 1);

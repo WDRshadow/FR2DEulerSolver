@@ -11,7 +11,7 @@
 // Rusanov Numerical Flux
 // -----------------------------------------
 
-Flux rusanovFlux(const Vec4& QL, const Vec4& QR, const Point& normal, double gamma = GAMMA);
+Vec4 rusanovFlux(const Vec4& QL, const Vec4& QR, const Point& normal, double gamma = GAMMA);
 
 // -----------------------------------------
 // Flux Gradient
