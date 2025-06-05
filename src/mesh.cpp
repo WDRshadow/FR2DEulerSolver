@@ -231,7 +231,7 @@ void init_fws_mesh2(Mesh& mesh, const int nx, const int ny, const double width, 
     }
 }
 
-void init_fws_mesh3(Mesh& mesh, int nx, int ny, double width, double height)
+void init_inf_mesh(Mesh& mesh, int nx, int ny, double width, double height)
 {
     mesh.nx = nx;
     mesh.ny = ny;

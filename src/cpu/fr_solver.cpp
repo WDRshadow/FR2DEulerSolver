@@ -23,7 +23,7 @@ FREulerSolver::FREulerSolver(Mesh&& mesh, const double u_inf, const double v_inf
                                       this->mesh.vertices[this->mesh.elements[cellId].vertexIds[3]]
                                   }, xi, eta);
         double r = std::sqrt((x - cx) * (x - cx) + (y - cy) * (y - cy));
-        double T = 1 - (r - 1) * beta * beta / (8 * gamma * EIGEN_PI * EIGEN_PI) * std::exp(1 - r * r);
+        double T = 1 - (gamma - 1) * beta * beta / (8 * gamma * EIGEN_PI * EIGEN_PI) * std::exp(1 - r * r);
         double rho = std::pow(T, 1.0 / (gamma - 1.0));
         double u = u_inf - beta / (2 * EIGEN_PI) * std::exp((1 - r * r) / 2) * (y - cy);
         double v = v_inf + beta / (2 * EIGEN_PI) * std::exp((1 - r * r) / 2) * (x - cx);

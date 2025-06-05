@@ -35,5 +35,6 @@ double minmod(double a, double b);
 double minmod(double a, double b, double c);
 void applyMinmodLimiter2D_GLL(std::vector<Q9>& _nodes, const Mesh& mesh, int cellId, double gamma);
 void bound_preserving_limiter(Q9& cellQ, double gamma);
+void avg_limiter(Q9& cellQ);
 
 #endif //FLUX_UTILS_H

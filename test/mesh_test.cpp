@@ -36,7 +36,7 @@ TEST(Mesh, test2)
 TEST(Mesh, test3)
 {
     Mesh mesh{};
-    init_fws_mesh3(mesh, 2, 2, 1.0, 1.0);
+    init_inf_mesh(mesh, 2, 2, 1.0, 1.0);
     EXPECT_EQ(mesh.vertices.size(), 9);
     EXPECT_DOUBLE_EQ(mesh.vertices[4].y, 0.5);
     EXPECT_EQ(mesh.elements.size(), 4);

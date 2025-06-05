@@ -21,8 +21,7 @@ Vec4 rusanovFlux(const Vec4& QL, const Vec4& QR, const Point& normal, const doub
     auto [FL, GL] = physicalFlux(QL, gamma);
     auto [FR, GR] = physicalFlux(QR, gamma);
     double nx = normal.x, ny = normal.y;
-    Vec4 Fn_nor = 0.5 * (FL * nx + GL * ny + FR * nx + GR * ny) - 0.5 * s * (QR - QL);
-    return Fn_nor;
+    return 0.5 * (FL * nx + GL * ny + FR * nx + GR * ny) - 0.5 * s * (QR - QL);
 }
 
 Flux gradFlux(const Q9& q9, const double xi, const double eta)
@@ -227,7 +226,6 @@ void applyMinmodLimiter2D_GLL(std::vector<Q9>& _nodes, const Mesh& mesh, const i
     }
 }
 
-
 void bound_preserving_limiter(Q9& cellQ, const double gamma)
 {
     constexpr double eps = 1e-12;
@@ -270,5 +268,15 @@ void bound_preserving_limiter(Q9& cellQ, const double gamma)
     {
         Vec4& U = cellQ[i];
         U = U_avg + (U - U_avg) * theta;
+    }
+}
+
+void avg_limiter(Q9& cellQ)
+{
+    const Vec4 U_avg = 0.25 * gll_integrate_2d(cellQ);
+    for (int i = 0; i < 9; ++i)
+    {
+        Vec4& U = cellQ[i];
+        U = U_avg;
     }
 }

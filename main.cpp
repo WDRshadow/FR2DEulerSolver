@@ -6,11 +6,11 @@
 int main()
 {
     Mesh mesh{};
-    init_fws_mesh3(mesh, 10, 10, 10.0, 10.0);
-    FREulerSolver solver(std::move(mesh), 0, 0, 5);
+    init_inf_mesh(mesh, 10, 10, 10.0, 10.0);
+    FREulerSolver solver(std::move(mesh), 0, 1, 5);
     std::string fileName = "output/output_" + std::to_string(0) + ".vtu";
     solver.toVTU(fileName);
-    for (int i = 1; i <= 1000; ++i)
+    for (int i = 1; i <= 10000; ++i)
     {
         solver.advance(0.001);
         if (i % 10 == 0)
