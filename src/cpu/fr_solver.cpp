@@ -203,13 +203,8 @@ std::function<Vec4(double s)> FREulerSolver::diffFlux(const std::vector<Q9>& _no
     const auto Js = jacobian(mesh, cellId, faceType);
     return [=](const double s)
     {
-        Vec4 result{};
-        for (int i = 0; i < 3; ++i)
-        {
-            result += (numFlux[i] - phyFlux[i]) * lagrange(i, s);
-        }
-        result = result * Js;
-        return result;
+        const int i = static_cast<int>(s + 1);
+        return (numFlux[i] - phyFlux[i]) * Js;
     };
 }
 
