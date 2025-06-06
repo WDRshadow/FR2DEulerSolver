@@ -96,7 +96,7 @@ double FREulerSolver::getCurrentTime() const
     return currentTime;
 }
 
-std::vector<Q9> FREulerSolver::getNodes() const
+std::vector<Q9>& FREulerSolver::getNodes()
 {
     return nodes;
 }
@@ -162,6 +162,7 @@ std::function<Vec4(double s)> FREulerSolver::diffFlux(const std::vector<Q9>& _no
                 q3_neighbour[0][1] = -q3_neighbour[0][1];
                 q3_neighbour[1][1] = -q3_neighbour[1][1];
                 q3_neighbour[2][1] = -q3_neighbour[2][1];
+                break;
             }
         case Y_WALL:
             {

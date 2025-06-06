@@ -19,7 +19,7 @@ public:
     void set_fws_bc(double rho, double u, double v, double p);
     void advance(double dt);
     [[nodiscard]] double getCurrentTime() const;
-    std::vector<Q9> getNodes() const;
+    std::vector<Q9>& getNodes();
     void toVTU(const std::string& filename) const;
 
 private:
