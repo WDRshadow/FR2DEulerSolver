@@ -72,16 +72,16 @@ void FREulerSolver::advance(const double dt)
     // RK4
     const auto k1 = computeResidual(nodes);
     auto u1_temp = nodes + k1 * (dt / 2);
-    // boundPreservingLimiter(u1_temp);
+    boundPreservingLimiter(u1_temp);
     const auto k2 = computeResidual(u1_temp);
     auto u2_temp = nodes + k2 * (dt / 2);
-    // boundPreservingLimiter(u2_temp);
+    boundPreservingLimiter(u2_temp);
     const auto k3 = computeResidual(u2_temp);
     auto u3_temp = nodes + k3 * dt;
-    // boundPreservingLimiter(u3_temp);
+    boundPreservingLimiter(u3_temp);
     const auto k4 = computeResidual(u3_temp);
     nodes += (k1 + k2 * 2 + k3 * 2 + k4) * (dt / 6);
-    // boundPreservingLimiter(nodes);
+    boundPreservingLimiter(nodes);
 
     // Euler
     // const auto residual = computeResidual(nodes);

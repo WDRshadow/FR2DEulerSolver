@@ -6,13 +6,14 @@
 int main()
 {
     Mesh mesh{};
-    init_inf_mesh(mesh, 10, 10, 10.0, 10.0);
-    FREulerSolver solver(std::move(mesh), 0, 1, 5);
+    init_fws_mesh2(mesh, 30, 10, 3.0, 1.0, 24, 2);
+    FREulerSolver solver(std::move(mesh), {1.4, 3.0, 0.0, 1.0});
+    solver.set_fws_bc(1.4, 3.0, 0.0, 1.0);
     std::string fileName = "output/output_" + std::to_string(0) + ".vtu";
     solver.toVTU(fileName);
-    for (int i = 1; i <= 10000; ++i)
+    for (int i = 1; i <= 1000; ++i)
     {
-        solver.advance(0.001);
+        solver.advance(0.0001);
         if (i % 10 == 0)
         {
             std::cout << "Current time: " << solver.getCurrentTime() << std::endl;
