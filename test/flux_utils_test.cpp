@@ -12,7 +12,7 @@ int main(int argc, char** argv)
 
 TEST(NUM_FLUX, base)
 {
-    constexpr Vec4 P = {1.0, 1.0, 0.0, 1.0};
+    constexpr Vec4 P = {1.4, 3.0, 0.0, 1.0};
     const Vec4 Q = toConservative(P);
     constexpr Point normal = {1.0, 0.0};
     const Vec4 F_num = rusanovFlux(Q, Q, normal);

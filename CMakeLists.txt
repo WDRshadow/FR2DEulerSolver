@@ -1,20 +1,12 @@
 cmake_minimum_required(VERSION 3.31)
 project(FR2DEulerSolver)
 
-include_directories(include)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(CUDAToolkit QUIET)
-if(CUDAToolkit_FOUND)
-    message(STATUS "CUDA detected: using GPU version.")
-    set(CMAKE_CUDA_STANDARD 17)
-    set(CMAKE_CUDA_STANDARD_REQUIRED ON)
-    file(GLOB SRC_FILES src/*.cpp src/cuda/*.cu)
-else()
-    message(STATUS "CUDA not detected: using CPU version.")
-    set(CMAKE_CXX_STANDARD 17)
-    set(CMAKE_CXX_STANDARD_REQUIRED ON)
-    file(GLOB SRC_FILES src/*.cpp src/cpu/*.cpp)
-endif()
+file(GLOB SRC_FILES src/*.cpp)
+
+include_directories(include)
 
 find_package(Eigen3 REQUIRED)
 
